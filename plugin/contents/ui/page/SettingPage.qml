@@ -28,6 +28,28 @@ Flickable {
     property alias cfg_PauseOnBatPower: chkbox_pauseOnBatPower.checked
     property alias cfg_PauseBatPercent: spin_pauseBatPercent.value
     property int   cfg_Rotation
+    property string cfg_AudioCaptureSource
+    property var pyext: null
+
+    property bool pyextReady: pyext !== null && (pyext ? pyext.ok : false)
+    onPyextReadyChanged: { if (pyextReady) tryLoadAudioSources(); }
+    onPyextChanged: { if (pyextReady) tryLoadAudioSources(); }
+
+    function tryLoadAudioSources() {
+        if (!pyext || !pyext.ok) return;
+        pyext.list_audio_sources().then(function(sources) {
+            audioSourceModel.clear();
+            for (var i = 0; i < sources.length; i++) {
+                audioSourceModel.append(sources[i]);
+            }
+            audioSourceCombo.selectSaved();
+        });
+    }
+
+    ListModel {
+        id: audioSourceModel
+        ListElement { label: "System Default (auto-detect)"; value: "" }
+    }
 
 
     Layout.fillWidth: true
@@ -273,6 +295,35 @@ Flickable {
                         to: 100
                         stepSize: 5.0
                         snapMode: Slider.SnapOnRelease
+                    }
+                }
+            }
+            OptionItem {
+                text: "Audio Capture Source"
+                text_color: Theme.textColor
+                icon: '../../images/volume-up.svg'
+                actor: ComboBox {
+                    id: audioSourceCombo
+                    model: audioSourceModel
+                    textRole: "label"
+                    function selectSaved() {
+                        for (var i = 0; i < audioSourceModel.count; i++) {
+                            if (audioSourceModel.get(i).value === cfg_AudioCaptureSource) {
+                                currentIndex = i;
+                                return;
+                            }
+                        }
+                        currentIndex = 0;
+                    }
+                    onActivated: cfg_AudioCaptureSource = audioSourceModel.get(currentIndex).value
+                    Component.onCompleted: selectSaved()
+                }
+                contentBottom: ColumnLayout {
+                    Text {
+                        Layout.fillWidth: true
+                        color: Theme.disabledTextColor
+                        text: "Which audio output to monitor for visualizer wallpapers"
+                        wrapMode: Text.Wrap
                     }
                 }
             }

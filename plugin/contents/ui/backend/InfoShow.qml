@@ -1,5 +1,6 @@
 import QtQuick 2.5
 import QtQuick.Layouts 1.2
+import org.kde.kirigami 2.4 as Kirigami
 
 Item {
     id: infoItem
@@ -8,6 +9,12 @@ Item {
     property string type: "unknown"
     property string wid: "unknown"
     property string source
+
+    Rectangle {
+        anchors.fill: parent
+        color: Kirigami.Theme.backgroundColor
+    }
+
     GridLayout {
         id: configRow
         columns: 1
@@ -21,10 +28,10 @@ Item {
             `Type: ${infoItem.type}`,
             `Message: ${infoItem.info}`
             ].join("\n");
-            color: "yellow"
+            color: Kirigami.Theme.textColor
             wrapMode: Text.Wrap
-            elide: Text.ElideRight 
-            font.pointSize: 30
+            elide: Text.ElideRight
+            font.pointSize: 14
         }
     }
     Component.onCompleted:{

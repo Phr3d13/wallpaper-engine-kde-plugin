@@ -95,7 +95,7 @@ RowLayout {
                     actions: [
                         Kirigami.Action {
                             icon.source: Qt.resolvedUrl('../../images/folder-outline.svg')
-                            icon.color: Theme.textColor
+                            icon.color: Kirigami.Theme.textColor
                             text: 'Library'
                             tooltip: cfg_SteamLibraryPath ? cfg_SteamLibraryPath : 'Select steam library dir'
                             onTriggered: wpDialog.open()
@@ -104,7 +104,7 @@ RowLayout {
                             id: action_cb_filter
                             text: 'Filter'
                             icon.source: Qt.resolvedUrl('../../images/filter.svg')
-                            icon.color: Theme.textColor
+                            icon.color: Kirigami.Theme.textColor
                             property int currentIndex
                             readonly property var model: Common.filterModel
                             readonly property var modelValues: Common.filterModel.getValueArray(cfg_FilterStr)
@@ -119,7 +119,7 @@ RowLayout {
                             id: action_cb_sort
                             text: model[currentIndex].short
                             icon.source: Qt.resolvedUrl('../../images/arrow-down.svg')
-                            icon.color: Theme.textColor
+                            icon.color: Kirigami.Theme.textColor
                             property int currentIndex: Common.modelIndexOfValue(model, cfg_SortMode)
                             readonly property var model: [
                                 {
@@ -142,7 +142,7 @@ RowLayout {
                         },
                         Kirigami.Action {
                             icon.source: Qt.resolvedUrl('../../images/refresh.svg')
-                            icon.color: Theme.textColor
+                            icon.color: Kirigami.Theme.textColor
                             text: 'Refresh'
                             onTriggered: wpListModel.refresh()
                         }
@@ -364,6 +364,9 @@ RowLayout {
         Layout.preferredWidth: parent.width / 3
         Layout.fillHeight: true
 
+        Kirigami.Theme.colorSet: Kirigami.Theme.View
+        Kirigami.Theme.inherit: false
+
         readonly property int image_size: 300
         readonly property int content_margin: 16
         property var wpmodel: { 
@@ -380,7 +383,7 @@ RowLayout {
         bottomPadding: 0
 
         background: Rectangle {
-            color: Theme.view.backgroundColor
+            color: Kirigami.Theme.backgroundColor
         }
 
         contentItem: Flickable {
@@ -402,163 +405,173 @@ RowLayout {
                 anchors.rightMargin: anchors.leftMargin
                 spacing: 8
 
-                AnimatedImage { 
-                    id: animated_image; 
-                    Layout.topMargin: right_content.content_margin
-                    Layout.preferredWidth: right_content.image_size
-                    Layout.preferredHeight: Layout.preferredWidth
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-
-                    source: Common.getWpModelPreviewSource(right_content.wpmodel)
-                    fillMode: Image.PreserveAspectFit
-                    cache: true
-                    asynchronous: true
-                    onStatusChanged: playing = (status == AnimatedImage.Ready)
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignTop
-                    Layout.minimumWidth: 0
+                OptionGroup {
                     Layout.fillWidth: true
-                    Layout.minimumHeight: implicitHeight
+                    header.text: 'About'
+                    header.text_color: Kirigami.Theme.textColor
+                    header.icon: '../../images/information-outline.svg'
+                    header.color: Kirigami.Theme.activeBackgroundColor
 
-                    text: right_content.wpmodel.title
-                    color: Theme.textColor
-                    font.bold: true
-                    textFormat: Text.PlainText
-                    wrapMode: Text.Wrap
-                    horizontalAlignment: Text.AlignHCenter
-                }
+                    AnimatedImage {
+                        id: animated_image;
+                        Layout.topMargin: right_content.content_margin
+                        Layout.preferredWidth: right_content.image_size
+                        Layout.preferredHeight: Layout.preferredWidth
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 
-                RowLayout {
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-                    spacing: 8
-
-                    Control {
-                        leftPadding: 8
-                        topPadding: 4
-
-                        rightPadding: leftPadding
-                        bottomPadding: topPadding
-
-                        background: Rectangle {
-                            color: Theme.view.positiveBackgroundColor
-                            radius: 8
-                        }
-                        contentItem: Text {
-                            color: Theme.view.textColor
-                            font.capitalization: Font.Capitalize
-                            text: right_content.wpmodel.type
-                        }
+                        source: Common.getWpModelPreviewSource(right_content.wpmodel)
+                        fillMode: Image.PreserveAspectFit
+                        cache: true
+                        asynchronous: true
+                        onStatusChanged: playing = (status == AnimatedImage.Ready)
                     }
 
-                    Control {
-                        id: control_dir_size
-                        leftPadding: 8
-                        topPadding: 4
+                    Text {
+                        Layout.alignment: Qt.AlignTop
+                        Layout.minimumWidth: 0
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: implicitHeight
 
-                        rightPadding: leftPadding
-                        bottomPadding: topPadding
-                        visible: false
+                        text: right_content.wpmodel.title
+                        color: Kirigami.Theme.textColor
+                        font.bold: true
+                        textFormat: Text.PlainText
+                        wrapMode: Text.Wrap
+                        horizontalAlignment: Text.AlignHCenter
+                    }
 
-                        background: Rectangle {
-                            color: Theme.view.positiveBackgroundColor
-                            radius: 8
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                        spacing: 8
+
+                        Control {
+                            leftPadding: 8
+                            topPadding: 4
+
+                            rightPadding: leftPadding
+                            bottomPadding: topPadding
+
+                            background: Rectangle {
+                                color: Kirigami.Theme.positiveBackgroundColor
+                                radius: 8
+                            }
+                            contentItem: Text {
+                                color: Kirigami.Theme.textColor
+                                font.capitalization: Font.Capitalize
+                                text: right_content.wpmodel.type
+                            }
                         }
-                        contentItem: Text {
-                            color: Theme.view.textColor
-                            font.capitalization: Font.Capitalize
-                            readonly property bool _set_text: {
-                                const dir = right_content.wpmodel.path;
-                                if(!dir.match(Common.regex_path_check)) {
-                                    control_dir_size.visible = false;
-                                    return false;
+
+                        Control {
+                            id: control_dir_size
+                            leftPadding: 8
+                            topPadding: 4
+
+                            rightPadding: leftPadding
+                            bottomPadding: topPadding
+                            visible: false
+
+                            background: Rectangle {
+                                color: Kirigami.Theme.positiveBackgroundColor
+                                radius: 8
+                            }
+                            contentItem: Text {
+                                color: Kirigami.Theme.textColor
+                                font.capitalization: Font.Capitalize
+                                readonly property bool _set_text: {
+                                    const dir = right_content.wpmodel.path;
+                                    if(!dir.match(Common.regex_path_check)) {
+                                        control_dir_size.visible = false;
+                                        return false;
+                                    }
+                                    pyext.get_dir_size(Common.urlNative(dir)).then(res => {
+                                        this.text = Utils.prettyBytes(res);
+                                        control_dir_size.visible = true;
+                                    }).catch(reason => console.error(reason));
+                                    return true;
                                 }
-                                pyext.get_dir_size(Common.urlNative(dir)).then(res => {
-                                    this.text = Utils.prettyBytes(res);
-                                    control_dir_size.visible = true;
-                                }).catch(reason => console.error(reason));
-                                return true;
                             }
                         }
+
+                        Kirigami.ActionToolBar {
+                            Layout.fillWidth: false
+                            Layout.preferredWidth: implicitWidth
+                            flat: true
+
+                            actions: [
+                                Kirigami.Action {
+                                    id: right_act_favor
+                                    icon.color: Kirigami.Theme.textColor
+                                    icon.source: right_content.wpmodel.favor 
+                                        ? Qt.resolvedUrl('../../images/bookmark.svg')
+                                        : Qt.resolvedUrl('../../images/bookmark-outline-add.svg')
+                                    tooltip: right_content.wpmodel.favor
+                                        ? 'Remove from favorites'
+                                        : 'Add to favorites'
+                                    onTriggered: picViewLoader.item.toggleFavor(right_content.wpmodel)
+                                },
+                                Kirigami.Action {
+                                    icon.source: Qt.resolvedUrl('../../images/link.svg')
+                                    icon.color: Kirigami.Theme.textColor
+                                    tooltip: "Open Workshop Link"
+                                    enabled: right_content.wpmodel.workshopid.match(Common.regex_workshop_online)
+                                    onTriggered: Qt.openUrlExternally(Common.getWorkshopUrl(right_content.wpmodel.workshopid))
+                                },
+                                Kirigami.Action {
+                                    icon.source: Qt.resolvedUrl('../../images/folder-outline.svg')
+                                    icon.color: Kirigami.Theme.textColor
+                                    tooltip: "Open Containing Folder"
+                                    onTriggered: Qt.openUrlExternally(right_content.wpmodel.path)
+                                },
+                                Kirigami.Action {
+                                    icon.name: "edit-delete"
+                                    tooltip: "Delete from disk"
+                                    enabled: Boolean(right_content.wpmodel.path)
+                                    onTriggered: picViewLoader.item.requestDelete(right_content.wpmodel)
+                                }
+                            ]
+                        }
                     }
 
-                    Kirigami.ActionToolBar {
-                        Layout.fillWidth: false
-                        Layout.preferredWidth: implicitWidth
-                        flat: true
+                    ListView {
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                        implicitWidth: contentItem.childrenRect.width
+                        implicitHeight: contentItem.childrenRect.height
 
-                        actions: [
-                            Kirigami.Action {
-                                id: right_act_favor
-                                icon.color: Theme.textColor
-                                icon.source: right_content.wpmodel.favor 
-                                    ? Qt.resolvedUrl('../../images/bookmark.svg')
-                                    : Qt.resolvedUrl('../../images/bookmark-outline-add.svg')
-                                tooltip: right_content.wpmodel.favor
-                                    ? 'Remove from favorites'
-                                    : 'Add to favorites'
-                                onTriggered: picViewLoader.item.toggleFavor(right_content.wpmodel)
-                            },
-                            Kirigami.Action {
-                                icon.source: Qt.resolvedUrl('../../images/link.svg')
-                                tooltip: "Open Workshop Link"
-                                enabled: right_content.wpmodel.workshopid.match(Common.regex_workshop_online)
-                                onTriggered: Qt.openUrlExternally(Common.getWorkshopUrl(right_content.wpmodel.workshopid))
-                            },
-                            Kirigami.Action {
-                                icon.source: Qt.resolvedUrl('../../images/folder-outline.svg')
-                                tooltip: "Open Containing Folder"
-                                onTriggered: Qt.openUrlExternally(right_content.wpmodel.path)
-                            },
-                            Kirigami.Action {
-                                icon.name: "edit-delete"
-                                tooltip: "Delete from disk"
-                                enabled: Boolean(right_content.wpmodel.path)
-                                onTriggered: picViewLoader.item.requestDelete(right_content.wpmodel)
+                        orientation: ListView.Horizontal
+                        model: ListModel {}
+                        readonly property bool _set_model: {
+                            const wpmodel = right_content.wpmodel;
+                            const tags = right_content.wpmodel.tags;
+                            const playlists = right_content.wpmodel.playlists;
+                            const _model = this.model;
+                            _model.clear();
+                            for(const i of Array(tags.length).keys())
+                                _model.append(tags.get(i));
+                            for(const i of Array(playlists.length).keys()){
+                                var playlist = playlists.get(i);
+                                if(playlist != null) { _model.append(playlists.get(i)); }
                             }
-                        ]
-                    }
-                }
-
-                ListView {
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-                    implicitWidth: contentItem.childrenRect.width
-                    implicitHeight: contentItem.childrenRect.height
-
-                    orientation: ListView.Horizontal
-                    model: ListModel {}
-                    readonly property bool _set_model: {
-                        const wpmodel = right_content.wpmodel;
-                        const tags = right_content.wpmodel.tags;
-                        const playlists = right_content.wpmodel.playlists;
-                        const _model = this.model;
-                        _model.clear();
-                        for(const i of Array(tags.length).keys())
-                            _model.append(tags.get(i));
-                        for(const i of Array(playlists.length).keys()){
-                            var playlist = playlists.get(i);
-                            if(playlist != null) { _model.append(playlists.get(i)); }
+                            _model.append({key: wpmodel.contentrating});
+                            return true;
                         }
-                        _model.append({key: wpmodel.contentrating});
-                        return true;
-                    }
-                    clip: false
-                    spacing: 8
+                        clip: false
+                        spacing: 8
 
-                    delegate: Control {
-                        leftPadding: 8
-                        topPadding: 4
-                        rightPadding: leftPadding
-                        bottomPadding: topPadding
+                        delegate: Control {
+                            leftPadding: 8
+                            topPadding: 4
+                            rightPadding: leftPadding
+                            bottomPadding: topPadding
 
-                        background: Rectangle {
-                            color: Theme.activeBackgroundColor
-                            radius: 8
-                        }
-                        contentItem: Text {
-                            color: Theme.view.textColor
-                            text: model.key
+                            background: Rectangle {
+                                color: Kirigami.Theme.activeBackgroundColor
+                                radius: 8
+                            }
+                            contentItem: Text {
+                                color: Kirigami.Theme.textColor
+                                text: model.key
+                            }
                         }
                     }
                 }
@@ -670,9 +683,9 @@ RowLayout {
                     }
 
                     header.text: 'Option'
-                    header.text_color: Theme.textColor
+                    header.text_color: Kirigami.Theme.textColor
                     header.icon: '../../images/cheveron-down.svg'
-                    header.color: Theme.activeBackgroundColor
+                    header.color: Kirigami.Theme.activeBackgroundColor
 
                     header.actor: Kirigami.ActionToolBar {
                         Layout.fillWidth: true
@@ -747,7 +760,7 @@ RowLayout {
                         ]
                         OptionItem {
                             text: modelData.text
-                            text_color: Theme.textColor
+                            text_color: Kirigami.Theme.textColor
 
                             property bool is_changed: right_opts.config && 
                                 right_opts.config_changes && 
@@ -783,11 +796,10 @@ RowLayout {
                     Layout.alignment: Qt.AlignTop
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    Layout.minimumHeight: implicitHeight
 
                     visible: false
                     text: ''
-                    color: Theme.textColor
+                    color: Kirigami.Theme.textColor
                     readonly property bool _set_text: {
                         const path = Common.getWpModelProjectPath(right_content.wpmodel);
                         if(path) {
@@ -881,9 +893,9 @@ RowLayout {
                     id: wp_props_group
                     Layout.fillWidth: true
                     header.text: 'Wallpaper Properties'
-                    header.text_color: Theme.textColor
+                    header.text_color: Kirigami.Theme.textColor
                     header.icon: '../../images/cheveron-down.svg'
-                    header.color: Theme.activeBackgroundColor
+                    header.color: Kirigami.Theme.activeBackgroundColor
 
                     readonly property string watchWorkshopId: right_opts.workshopid
                     onWatchWorkshopIdChanged: reload()
@@ -929,7 +941,7 @@ RowLayout {
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
                                 text: model.label
-                                color: Theme.textColor
+                                color: Kirigami.Theme.textColor
                                 wrapMode: Text.WordWrap
                             }
 

@@ -20,7 +20,7 @@
     </entry>
     <entry name="BackgroundColor" type="String">
       <label>Last folder used</label>
-      <default>black</default>
+      <default>transparent</default>
     </entry>
     <entry name="DisplayMode" type="Int">
       <label>Video display mode</label>
@@ -108,6 +108,10 @@
     </entry>
     <entry name="CustomConf" type="String">
       <label>CustomConf</label>
+      <default></default>
+    </entry>
+    <entry name="AudioCaptureSource" type="String">
+      <label>Audio capture source</label>
       <default></default>
     </entry>
   </group>

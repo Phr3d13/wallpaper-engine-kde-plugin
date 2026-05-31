@@ -8,7 +8,7 @@ WallpaperItem {
 Rectangle {
     id: background
     anchors.fill: parent
-    color: wallpaper.configuration.BackgroundColor
+    color: "transparent"
     
     property string steamlibrary: Qt.resolvedUrl(wallpaper.configuration.SteamLibraryPath).toString()
     property string source: Qt.resolvedUrl(wallpaper.configuration.WallpaperSource).toString()
@@ -23,6 +23,10 @@ Rectangle {
     property bool   noRandomWhilePaused: wallpaper.configuration.NoRandomWhilePaused
     property bool   mouseInput: wallpaper.configuration.MouseInput
     property bool   mpvStats: wallpaper.configuration.MpvStats
+    property string audioSource: wallpaper.configuration.AudioCaptureSource
+    onAudioSourceChanged: {
+        if(pyext.ok) pyext.set_audio_source(audioSource);
+    }
 
     property bool   pauseOnBatPower: wallpaper.configuration.PauseOnBatPower
     property int    pauseBatPercent: wallpaper.configuration.PauseBatPercent
@@ -187,6 +191,9 @@ Rectangle {
 
     Pyext {
         id: pyext
+        onOkChanged: {
+            if(ok) pyext.set_audio_source(background.audioSource);
+        }
     }
     WallpaperListModel {
         id: wpListModel

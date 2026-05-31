@@ -63,6 +63,12 @@ Item {
     function get_audio() {
         return ws_server.jrpc.send("get_audio", []).then(res => res.result);
     }
+    function list_audio_sources() {
+        return ws_server.jrpc.send("list_audio_sources", []).then(res => res.result);
+    }
+    function set_audio_source(source) {
+        return ws_server.jrpc.send("set_audio_source", [source]);
+    }
 
 
 
@@ -120,6 +126,7 @@ Item {
     }
 
     Plasma5Support.DataSource {
+        id: execDs
         engine: 'executable'
         connectedSources: [source]
         onNewData: {
@@ -127,6 +134,32 @@ Item {
             _log += "\n" + data.stdout;
             console.error(data.stderr);
             console.error(data.stdout);
+        }
+    }
+
+    // Auto-restart pyext when it disconnects (process exited or was killed).
+    // The executable DataEngine has no built-in restart — we bounce the source.
+    Connections {
+        target: ws_server
+        function onClientConnected() {
+            restartTimer.stop();
+        }
+    }
+
+    Timer {
+        id: restartTimer
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            execDs.disconnectSource(root.source);
+            execDs.connectSource(root.source);
+        }
+    }
+
+    readonly property bool _watchOk: ok
+    onOkChanged: {
+        if (!ok) {
+            restartTimer.start();
         }
     }
 }

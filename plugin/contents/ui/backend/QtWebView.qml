@@ -90,6 +90,7 @@ Item {
             settings.showScrollBars = false;
 
             settings.localContentCanAccessRemoteUrls = true;
+            settings.localContentCanAccessFileUrls = true;
             settings.allowGeolocationOnInsecureOrigins = true;
             _init = true;
         }
