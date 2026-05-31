@@ -60,6 +60,9 @@ Item {
     function delete_wallpaper(path, workshopid) {
         return ws_server.jrpc.send("delete_wallpaper", [path, workshopid || ""]).then(res => res.result);
     }
+    function get_audio() {
+        return ws_server.jrpc.send("get_audio", []).then(res => res.result);
+    }
 
 
 

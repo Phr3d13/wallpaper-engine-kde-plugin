@@ -326,7 +326,7 @@ Rectangle {
                 break;
             case 'web':
                 qmlsource = "backend/QtWebView.qml";
-                properties = {readfile: pyext.readfile};
+                properties = {readfile: pyext.readfile, getAudio: function() { return pyext.get_audio(); }, readWallpaperConfig: function(id) { return pyext.read_wallpaper_config(id); }};
                 break;
             case 'scene':
                 if(background.hasLib) {
