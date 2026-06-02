@@ -100,6 +100,12 @@ async def _audio_capture_loop() -> None:
         proc = None
         try:
             source = await _find_monitor_source()
+            if not source:
+                # No monitor source available yet — PipeWire may still be
+                # initializing at boot. Don't fall back to the default source
+                # (usually the microphone input). Wait and retry.
+                await asyncio.sleep(2)
+                continue
             cmd = [
                 'parec',
                 '--format=float32le',
@@ -107,9 +113,8 @@ async def _audio_capture_loop() -> None:
                 '--channels=1',
                 '--latency-msec=30',
                 '--stream-name=WEListener',
+                '--device', source,
             ]
-            if source:
-                cmd += ['--device', source]
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
@@ -117,7 +122,17 @@ async def _audio_capture_loop() -> None:
             )
             buf = b''
             while True:
-                chunk = await proc.stdout.read(bytes_per_frame)
+                try:
+                    chunk = await asyncio.wait_for(
+                        proc.stdout.read(bytes_per_frame), timeout=2.0
+                    )
+                except asyncio.TimeoutError:
+                    # parec produced no data (e.g. source is suspended at boot).
+                    # Check restart flag so set_audio_source() is never blocked.
+                    if _audio_restart_requested:
+                        _was_restart = True
+                        break
+                    continue
                 if not chunk:
                     break
                 if _audio_restart_requested:
@@ -131,8 +146,15 @@ async def _audio_capture_loop() -> None:
                     mag = _np.abs(_np.fft.rfft(windowed, n=CHUNK))[:BINS].astype(float)
                     frame_max = float(_np.max(mag)) if mag.size else 0.0
                     _run_max = max(_run_max * DECAY, frame_max, 1e-6)
-                    scaled = (mag / _run_max).tolist()
-                    _audio_data = scaled + scaled
+                    # Silence gate: if raw peak is below absolute floor, treat as silence.
+                    # This prevents background noise from being normalised up to ~1.0
+                    # when _run_max has decayed to near zero.
+                    SILENCE_FLOOR = 0.01  # absolute FFT magnitude threshold
+                    if frame_max < SILENCE_FLOOR:
+                        _audio_data = [0.0] * 128
+                    else:
+                        scaled = (mag / _run_max).tolist()
+                        _audio_data = scaled + scaled
         except asyncio.CancelledError:
             raise  # re-raise; finally block below handles cleanup
         except Exception:

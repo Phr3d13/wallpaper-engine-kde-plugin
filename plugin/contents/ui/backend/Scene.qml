@@ -7,12 +7,23 @@ Item{
     anchors.fill: parent
     property alias source: player.source
     property string assets: "assets"
+    property var getAudio
+    // Passed from main.qml so we can read saved per-wallpaper config from disk.
+    property var readWallpaperConfig
     property int displayMode: background.displayMode
     property var volumeFade: Common.createVolumeFade(
         sceneItem, 
         Qt.binding(function() { return background.mute ? 0 : background.volume; }),
         (volume) => { player.volume = volume / 100.0; }
     )
+
+    // Apply (or re-apply after save) saved user property overrides.
+    function applyUserProperties() {
+        if (!readWallpaperConfig) return;
+        readWallpaperConfig(background.workshopid).then(function(saved) {
+            player.setUserProperties(saved || {});
+        });
+    }
 
     onDisplayModeChanged: {
         if(displayMode == Common.DisplayMode.Scale)
@@ -21,6 +32,15 @@ Item{
             player.fillMode = SceneViewer.ASPECTFIT;
         else if(displayMode == Common.DisplayMode.Crop)
             player.fillMode = SceneViewer.ASPECTCROP;
+    }
+
+    // Re-apply user properties whenever the saved config changes
+    // (toggled by WallpaperPage.save_changes after writing to disk).
+    Connections {
+        target: background
+        function onPerOptChangedChanged() {
+            sceneItem.applyUserProperties();
+        }
     }
 
     SceneViewer {
@@ -43,9 +63,28 @@ Item{
         }
     }
 
+    Timer {
+        id: audioTimer
+        interval: 33
+        running: sceneItem.getAudio !== undefined
+        repeat: true
+        onTriggered: {
+            sceneItem.getAudio().then(function(data) {
+                if (data && data.length >= 128) {
+                    player.setAudioData(data);
+                } else {
+                    console.log("[Scene audio] data invalid:", data ? data.length : "null");
+                }
+            });
+        }
+    }
+
     Component.onCompleted: {
         background.nowBackend = 'scene';
         sceneItem.displayModeChanged();
+        console.log("[Scene audio] getAudio defined:", sceneItem.getAudio !== undefined);
+        // Load saved user properties so they are applied on initial scene parse.
+        sceneItem.applyUserProperties();
     }
     function play() {
         volumeFade.start();

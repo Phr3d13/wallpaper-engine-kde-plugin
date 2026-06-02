@@ -66,6 +66,30 @@ Item {
             // AI: end
         }
     }
+
+    // Re-fire sigUserProperties whenever saved per-wallpaper config changes
+    // (toggled by WallpaperPage.save_changes after writing to disk).
+    Connections {
+        target: background
+        function onPerOptChangedChanged() {
+            if (!webobj.loaded || !webItem.readWallpaperConfig) return;
+            readfile(Common.urlNative(background.getWorkshopIDPath()) + "/project.json", function(text) {
+                const json = Utils.parseJson(text);
+                const props = json && json.general && json.general.properties;
+                if (!props) return;
+                webItem.readWallpaperConfig(background.workshopid).then(function(saved) {
+                    if (saved) {
+                        for (var key in saved) {
+                            if (props[key] !== undefined)
+                                props[key] = Object.assign({}, props[key], { value: saved[key] });
+                        }
+                    }
+                    webobj.sigUserProperties(props);
+                });
+            });
+        }
+    }
+
     WebChannel {
         id: channel
         registeredObjects: [webobj]
@@ -138,7 +162,7 @@ Item {
                 },
                 {
                     name: "Audio",
-                    sourceCode: "window.wallpaperRegisterAudioListener = function(l) { if(window.wpeQml) window.wpeQml.sigAudio.connect(l); else window.wallpaperRAed = l; };",
+                    sourceCode: "window._wpeAudioListeners = []; window.wallpaperRegisterAudioListener = function(l) { if(window.wpeQml) { window.wpeQml.sigAudio.connect(l); console.log('WPE: sigAudio direct-connect'); } else { window._wpeAudioListeners.push(l); console.log('WPE: sigAudio queued count=' + window._wpeAudioListeners.length); } };",
                     injectionPoint: WebEngineScript.DocumentCreation,
                     worldId: WebEngineScript.MainWorld
                 },
@@ -149,7 +173,7 @@ Item {
                     // fetches project.json via XHR so wallpapers that require
                     // applyUserProperties to init (e.g. AudiOrbits) start correctly.
                     // Status 0 is expected for a successful file:// XHR in Chromium.
-                    sourceCode: "new QWebChannel(qt.webChannelTransport, function(ch) { window.wpeQml = ch.objects.wpeQml; var q = window.wpeQml; var pl = window.wallpaperPropertyListener; console.log('WPE: ObjectInjector connected pl=' + (pl ? 'yes' : 'no')); if(window.wallpaperRAed) q.sigAudio.connect(window.wallpaperRAed); if(pl) { if(pl.applyGeneralProperties) q.sigGeneralProperties.connect(pl.applyGeneralProperties); if(pl.applyUserProperties) q.sigUserProperties.connect(pl.applyUserProperties); } q.loaded = true; if(pl && pl.applyUserProperties) { var xhr = new XMLHttpRequest(); xhr.open('GET', './project.json', true); xhr.onreadystatechange = function() { if(xhr.readyState === 4 && (xhr.status === 0 || xhr.status === 200)) { try { var proj = JSON.parse(xhr.responseText); var props = proj && proj.general && proj.general.properties; if(props) { console.log('WPE: XHR applyUserProperties ok (' + Object.keys(props).length + ' props) webgl=' + (!!window.WebGLRenderingContext) + ' expwebgl=' + (function(){try{return !!document.createElement(String.fromCharCode(99,97,110,118,97,115)).getContext('webgl');}catch(e){return false;}}())); if(props.seizure_warning) props.seizure_warning.value = false; if(pl.applyGeneralProperties) pl.applyGeneralProperties({fps: 30}); pl.applyUserProperties(props); setTimeout(function(){ var ao=window.audiOrbits; console.log('WPE: post-init state=' + (ao?ao.state:'no-audiOrbits') + ' renderer=' + (ao&&ao.renderer?'yes':'no') + ' THREE=' + (typeof THREE) + ' Detector.webgl=' + (typeof Detector!=='undefined'?Detector.webgl:'no-Detector')); }, 2000); } } catch(e) { console.warn('WPE: project.json error: ' + e); } } }; xhr.send(); } var _origErr=window.onerror; window.onerror=function(msg,src,line,col,err){ console.log('WPE: window.onerror: '+msg+' @ '+src+':'+line); if(_origErr) _origErr(msg,src,line,col,err); return false; }; document.getElementsByTagName('body')[0].ondragstart = function() { return false; }; });",
+                    sourceCode: "new QWebChannel(qt.webChannelTransport, function(ch) { window.wpeQml = ch.objects.wpeQml; var q = window.wpeQml; var pl = window.wallpaperPropertyListener; console.log('WPE: ObjectInjector connected pl=' + (pl ? 'yes' : 'no')); (window._wpeAudioListeners||[]).forEach(function(l){q.sigAudio.connect(l);}); if(pl&&pl.applyAudioData) q.sigAudio.connect(pl.applyAudioData); console.log('WPE: audio setup queued='+(window._wpeAudioListeners||[]).length+' applyAudioData='+(pl&&!!pl.applyAudioData)); if(pl) { if(pl.applyGeneralProperties) q.sigGeneralProperties.connect(pl.applyGeneralProperties); if(pl.applyUserProperties) q.sigUserProperties.connect(pl.applyUserProperties); } q.loaded = true; if(pl && pl.applyUserProperties) { var xhr = new XMLHttpRequest(); xhr.open('GET', './project.json', true); xhr.onreadystatechange = function() { if(xhr.readyState === 4 && (xhr.status === 0 || xhr.status === 200)) { try { var proj = JSON.parse(xhr.responseText); var props = proj && proj.general && proj.general.properties; if(props) { console.log('WPE: XHR applyUserProperties ok (' + Object.keys(props).length + ' props) webgl=' + (!!window.WebGLRenderingContext) + ' expwebgl=' + (function(){try{return !!document.createElement(String.fromCharCode(99,97,110,118,97,115)).getContext('webgl');}catch(e){return false;}}())); if(props.seizure_warning) props.seizure_warning.value = false; if(pl.applyGeneralProperties) pl.applyGeneralProperties({fps: 30}); pl.applyUserProperties(props); setTimeout(function(){ var ao=window.audiOrbits; console.log('WPE: post-init state=' + (ao?ao.state:'no-audiOrbits') + ' renderer=' + (ao&&ao.renderer?'yes':'no') + ' THREE=' + (typeof THREE) + ' Detector.webgl=' + (typeof Detector!=='undefined'?Detector.webgl:'no-Detector')); }, 2000); } } catch(e) { console.warn('WPE: project.json error: ' + e); } } }; xhr.send(); } var _origErr=window.onerror; window.onerror=function(msg,src,line,col,err){ console.log('WPE: window.onerror: '+msg+' @ '+src+':'+line); if(_origErr) _origErr(msg,src,line,col,err); return false; }; document.getElementsByTagName('body')[0].ondragstart = function() { return false; }; });",
                     // AI: end
                     injectionPoint: WebEngineScript.Deferred,
                     worldId: WebEngineScript.MainWorld

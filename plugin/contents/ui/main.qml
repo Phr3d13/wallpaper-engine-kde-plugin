@@ -338,7 +338,7 @@ Rectangle {
             case 'scene':
                 if(background.hasLib) {
                     qmlsource = "backend/Scene.qml";
-                    properties = {"assets": Common.getAssetsPath(steamlibrary)};
+                    properties = {"assets": Common.getAssetsPath(steamlibrary), getAudio: function() { return pyext.get_audio(); }, readWallpaperConfig: function(id) { return pyext.read_wallpaper_config(id); }};
                 } else {
                     backendLoader.loadInfoShow("Plugin lib not found. To support scene, please compile and install it.");
                     return; 

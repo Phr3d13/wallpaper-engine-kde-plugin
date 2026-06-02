@@ -639,13 +639,18 @@ RowLayout {
                     }
                     function save_changes() {
                         config_resets.forEach((wid) => {
-                            pyext.reset_wallpaper_config(wid).then(res => {});
+                            pyext.reset_wallpaper_config(wid).then(res => {
+                                // Notify the running wallpaper that per-wallpaper config changed.
+                                cfg_PerOptChanged = !cfg_PerOptChanged;
+                            });
                         });
                         Object.entries(config_changes).forEach(([wid, cfg]) => {
                             pyext.write_wallpaper_config(wid, cfg).then(res => {
                                 if(wid == workshopid)
-                                    this.cofnig.update(this.config_changes);
+                                    this.config = Object.assign({}, this.config, cfg);
                                 this.config_changes = {};
+                                // Notify the running wallpaper that per-wallpaper config changed.
+                                cfg_PerOptChanged = !cfg_PerOptChanged;
                             });
                         });
 
